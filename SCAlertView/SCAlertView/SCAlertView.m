@@ -75,8 +75,9 @@
     CGFloat width = 270;
     CGFloat x = ([UIScreen mainScreen].bounds.size.width - 270) / 2.0;
     SCAlertView *alertView = [[SCAlertView alloc] initWithFrame:CGRectMake(x, 0, width, 0)];
-    alertView.backgroundColor = [UIColor whiteColor];
+    alertView.backgroundColor = [UIColor colorWithRed:241/255.0 green:241/255.0 blue:237/255.0 alpha:1];
     alertView.layer.cornerRadius = 12;
+    alertView.clipsToBounds = YES;
     [alertView layoutAlertView];
     return alertView;
 }
@@ -139,19 +140,21 @@
         } else if (self.actions.count >= 2) {
             UIButton *button = [self createButton:self.actions[0]];
             button.tag = 1000;
-            button.frame = CGRectMake(0, height, 134.5, 44);
+            button.frame = CGRectMake(0, height, 135, 44);
             [self.buttons addObject:button];
             
             frame = self.lineMid.frame;
-            frame.origin.x = 134.5;
+            frame.origin.x = 135;
             frame.origin.y = height;
             self.lineMid.frame = frame;
             
             button = [self createButton:self.actions[1]];
             button.tag = 1001;
-            button.frame = CGRectMake(135, height, 134.5, 44);
+            button.frame = CGRectMake(135, height, 135, 44);
             [self.buttons addObject:button];
             height += 44;
+            
+            [self bringSubviewToFront:self.lineMid];
         }
     } else {
         [_lineTop removeFromSuperview];
@@ -166,9 +169,20 @@
     NSAssert(height != 0, @"SCAlertView must have a title, a message or an action to display");
 }
 
+- (UIImage *)cornerRadiusBackgroundImage {
+    UIGraphicsBeginImageContext(CGSizeMake(1, 1));
+    CGContextRef ctx = UIGraphicsGetCurrentContext();
+    CGContextSetFillColorWithColor(ctx, [UIColor colorWithRed:224/255.0 green:224/255.0 blue:224/255.0 alpha:1].CGColor);
+    CGContextFillRect(ctx, CGRectMake(0, 0, 1, 1));
+    UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    return image;
+}
+
 - (UIButton *)createButton:(SCAlertAction *)action {
     UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
-    button.titleLabel.font = [UIFont systemFontOfSize:16];
+    [button setBackgroundImage:[self cornerRadiusBackgroundImage] forState:UIControlStateHighlighted];
+    button.titleLabel.font = [UIFont boldSystemFontOfSize:16];
     [button setTitle:action.title forState:UIControlStateNormal];
     if (action.style == SCAlertActionStyleCancel) {
         [button setTitleColor:[UIColor colorWithRed:102/255.0 green:102/255.0 blue:102/255.0 alpha:1] forState:UIControlStateNormal];
@@ -200,7 +214,7 @@
     UIView *backgroundView = [[UIView alloc] init];
     backgroundView.frame = window.bounds;
     backgroundView.backgroundColor = [UIColor blackColor];
-    backgroundView.alpha = 0.4;
+    backgroundView.alpha = 0;
     [window addSubview:backgroundView];
     _backgroundView = backgroundView;
     [window addSubview:self];
@@ -208,7 +222,8 @@
     
     self.alpha = 0;
     self.transform = CGAffineTransformMakeScale(1.15, 1.15);
-    [UIView animateWithDuration:0.3 animations:^{
+    [UIView animateWithDuration:0.2 animations:^{
+        backgroundView.alpha = 0.4;
         self.alpha = 1;
         self.transform = CGAffineTransformMakeScale(1, 1);
     }];
@@ -270,7 +285,7 @@
         CGFloat width = 238;
         CGFloat x = (270 - 238) / 2;
         UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(x, 0, width, 0)];
-        label.font = [UIFont systemFontOfSize:15];
+        label.font = [UIFont boldSystemFontOfSize:17];
         label.textAlignment = NSTextAlignmentCenter;
         label.numberOfLines = 0;
         label.textColor = [UIColor colorWithRed:51/255.0 green:51/255.0 blue:51/255.0 alpha:1];
@@ -285,10 +300,10 @@
         CGFloat width = 238;
         CGFloat x = (270 - 238) / 2;
         UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(x, 0, width, 0)];
-        label.font = [UIFont systemFontOfSize:12];
+        label.font = [UIFont systemFontOfSize:13];
         label.textAlignment = NSTextAlignmentCenter;
         label.numberOfLines = 0;
-        label.textColor = [UIColor colorWithRed:153/255.0 green:153/255.0 blue:153/255.0 alpha:1];
+        label.textColor = [UIColor colorWithRed:102/255.0 green:102/255.0 blue:102/255.0 alpha:1];
         [self addSubview:label];
         _messageLabel = label;
     }

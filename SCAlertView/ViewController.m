@@ -30,6 +30,8 @@
 - (void)pressView:(id)sender {
     UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"同意退款￥12" message:@"退款金额将返回买家银行卡" preferredStyle:UIAlertControllerStyleAlert];
     [alert addAction:[UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleCancel handler:nil]];
+    [alert addAction:[UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleDefault handler:nil]];
+
     [self presentViewController:alert animated:YES completion:nil];
 }
 
