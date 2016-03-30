@@ -13,6 +13,7 @@
 		253AD7111C8F1A6500603CAE /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 253AD70F1C8F1A6500603CAE /* Main.storyboard */; };
 		253AD7131C8F1A6500603CAE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 253AD7121C8F1A6500603CAE /* Assets.xcassets */; };
 		253AD7161C8F1A6500603CAE /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 253AD7141C8F1A6500603CAE /* LaunchScreen.storyboard */; };
+		253AD7201C8F1A9200603CAE /* SCAlertView.m in Sources */ = {isa = PBXBuildFile; fileRef = 253AD71F1C8F1A9200603CAE /* SCAlertView.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -26,6 +27,8 @@
 		253AD7121C8F1A6500603CAE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		253AD7151C8F1A6500603CAE /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		253AD7171C8F1A6500603CAE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		253AD71E1C8F1A9200603CAE /* SCAlertView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SCAlertView.h; sourceTree = "<group>"; };
+		253AD71F1C8F1A9200603CAE /* SCAlertView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SCAlertView.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,6 +61,7 @@
 		253AD7051C8F1A6500603CAE /* SCAlertView */ = {
 			isa = PBXGroup;
 			children = (
+				253AD71D1C8F1A8300603CAE /* SCAlertView */,
 				253AD7091C8F1A6500603CAE /* AppDelegate.h */,
 				253AD70A1C8F1A6500603CAE /* AppDelegate.m */,
 				253AD70C1C8F1A6500603CAE /* ViewController.h */,
@@ -77,6 +81,15 @@
 				253AD7071C8F1A6500603CAE /* main.m */,
 			);
 			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		253AD71D1C8F1A8300603CAE /* SCAlertView */ = {
+			isa = PBXGroup;
+			children = (
+				253AD71E1C8F1A9200603CAE /* SCAlertView.h */,
+				253AD71F1C8F1A9200603CAE /* SCAlertView.m */,
+			);
+			path = SCAlertView;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -150,6 +163,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				253AD70E1C8F1A6500603CAE /* ViewController.m in Sources */,
+				253AD7201C8F1A9200603CAE /* SCAlertView.m in Sources */,
 				253AD70B1C8F1A6500603CAE /* AppDelegate.m in Sources */,
 				253AD7081C8F1A6500603CAE /* main.m in Sources */,
 			);
