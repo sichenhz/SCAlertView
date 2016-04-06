@@ -45,6 +45,8 @@ static CGFloat const kButtonHeight = 44;
 
 @implementation SCAlertView
 
+#pragma mark - Public Method
+
 + (instancetype)alertViewWithTitle:(NSString *)title message:(NSString *)message style:(SCAlertViewStyle)style {
     SCAlertView *alertView = [self alertViewWithStyle:style];
     alertView.title = title;
@@ -73,6 +75,84 @@ static CGFloat const kButtonHeight = 44;
     return alertView;
 }
 
+- (void)addAction:(SCAlertAction *)action {
+    NSMutableArray *arrM = [NSMutableArray arrayWithArray:self.actions];
+    [arrM addObject:action];
+    self.actions = [arrM copy];
+    [self layoutAlertView];
+}
+
+- (void)show {
+    if (self.isShowing) {
+        return;
+    }
+    self.isShowing = YES;
+    
+    UIWindow *window = [UIApplication sharedApplication].keyWindow;
+    UIView *backgroundView = [[UIView alloc] init];
+    backgroundView.frame = window.bounds;
+    backgroundView.backgroundColor = [UIColor blackColor];
+    backgroundView.alpha = 0;
+    [backgroundView addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(backgroundViewTap:)]];
+    [window addSubview:backgroundView];
+    _backgroundView = backgroundView;
+    [window addSubview:self];
+    
+    if (self.style == SCAlertViewStyleAlert) {
+        self.alpha = 0;
+        self.transform = CGAffineTransformMakeScale(1.15, 1.15);
+        [UIView animateWithDuration:0.2 animations:^{
+            backgroundView.alpha = 0.4;
+            self.alpha = 1;
+            self.transform = CGAffineTransformMakeScale(1, 1);
+        }];
+    } else {
+        self.transform = CGAffineTransformMakeTranslation(0, self.frame.size.height);
+        [UIView animateWithDuration:0.2 animations:^{
+            backgroundView.alpha = 0.4;
+            self.transform = CGAffineTransformMakeTranslation(0, 0);
+        }];
+    }
+}
+
+- (void)setTitle:(NSString *)title {
+    if (_title != title) {
+        _title = title;
+        self.titleLabel.text = title;
+        
+        [self layoutAlertView];
+    }
+}
+
+- (void)setAttrTitle:(NSAttributedString *)attrTitle {
+    if (_attrTitle != attrTitle) {
+        _attrTitle = attrTitle;
+        self.titleLabel.attributedText = attrTitle;
+        
+        [self layoutAlertView];
+    }
+}
+
+- (void)setMessage:(NSString *)message {
+    if (_message != message) {
+        _message = message;
+        self.messageLabel.text = message;
+        
+        [self layoutAlertView];
+    }
+}
+
+- (void)setAttrMessage:(NSAttributedString *)attrMessage {
+    if (_attrMessage != attrMessage) {
+        _attrMessage = attrMessage;
+        self.messageLabel.attributedText = attrMessage;
+        
+        [self layoutAlertView];
+    }
+}
+
+#pragma mark - Private Method
+
 + (instancetype)alertViewWithStyle:(SCAlertViewStyle)style {
     SCAlertView *alertView = [[SCAlertView alloc] init];
     alertView.backgroundColor = [UIColor colorWithRed:241/255.0 green:241/255.0 blue:237/255.0 alpha:1];
@@ -87,15 +167,7 @@ static CGFloat const kButtonHeight = 44;
         CGFloat width = [UIScreen mainScreen].bounds.size.width;
         alertView.frame = CGRectMake(0, 0, width, 0);
     }
-    [alertView layoutAlertView];
     return alertView;
-}
-
-- (void)addAction:(SCAlertAction *)action {
-    NSMutableArray *arrM = [NSMutableArray arrayWithArray:self.actions];
-    [arrM addObject:action];
-    self.actions = [arrM copy];
-    [self layoutAlertView];
 }
 
 - (void)layoutAlertView {
@@ -107,9 +179,10 @@ static CGFloat const kButtonHeight = 44;
 }
 
 - (void)layoutActionSheet {
-    CGFloat height = 14;
+    CGFloat height = 0;
     CGFloat labelWidth = self.frame.size.width - 32;
     if (self.title || self.attrTitle) {
+        height += 14;
         CGRect frame = self.titleLabel.frame;
         frame.origin.y = height;
         frame.size.height = [self.titleLabel sizeThatFits:CGSizeMake(labelWidth, MAXFLOAT)].height;
@@ -120,6 +193,8 @@ static CGFloat const kButtonHeight = 44;
     if (self.message || self.attrMessage) {
         if (self.title || self.attrTitle) {
             height += 2;
+        } else {
+            height += 14;
         }
         CGRect frame = self.messageLabel.frame;
         frame.origin.y = height;
@@ -158,14 +233,13 @@ static CGFloat const kButtonHeight = 44;
     frame.size.height = height;
     frame.origin.y = [UIScreen mainScreen].bounds.size.height - height;
     self.frame = frame;
-    
-    NSAssert(height != 0, @"SCAlertView must have a title, a message or an action to display");
 }
 
 - (void)layoutAlert {
-    CGFloat height = 22;
+    CGFloat height = 0;
     CGFloat labelWidth = self.frame.size.width - 32;
     if (self.title || self.attrTitle) {
+        height += 22;
         CGRect frame = self.titleLabel.frame;
         frame.origin.y = height;
         frame.size.height = [self.titleLabel sizeThatFits:CGSizeMake(labelWidth, MAXFLOAT)].height;
@@ -176,18 +250,14 @@ static CGFloat const kButtonHeight = 44;
     if (self.message || self.attrMessage) {
         if (self.title || self.attrTitle) {
             height += 5;
-            CGRect frame = self.messageLabel.frame;
-            frame.origin.y = height;
-            frame.size.height = [self.messageLabel sizeThatFits:CGSizeMake(labelWidth, MAXFLOAT)].height;
-            self.messageLabel.frame = frame;
-            height += frame.size.height;
         } else {
-            CGRect frame = self.messageLabel.frame;
-            frame.origin.y = height;
-            frame.size.height = [self.messageLabel sizeThatFits:CGSizeMake(labelWidth, MAXFLOAT)].height;
-            self.messageLabel.frame = frame;
-            height += frame.size.height;
+            height += 22;
         }
+        CGRect frame = self.messageLabel.frame;
+        frame.origin.y = height;
+        frame.size.height = [self.messageLabel sizeThatFits:CGSizeMake(labelWidth, MAXFLOAT)].height;
+        self.messageLabel.frame = frame;
+        height += frame.size.height;
     }
     
     if ((self.title || self.attrTitle) || (self.message || self.attrMessage)) {
@@ -234,8 +304,6 @@ static CGFloat const kButtonHeight = 44;
     frame.size.height = height;
     frame.origin.y = ([UIScreen mainScreen].bounds.size.height - height) / 2;
     self.frame = frame;
-    
-    NSAssert(height != 0, @"SCAlertView must have a title, a message or an action to display");
 }
 
 - (UIView *)layoutLine:(SCAlertAction *)action index:(NSInteger)index height:(CGFloat)height {
@@ -276,7 +344,7 @@ static CGFloat const kButtonHeight = 44;
     }
     if (action.style == SCAlertActionStyleConfirm) {
         [button setTitleColor:[UIColor colorWithRed:255/255.0 green:102/255.0 blue:102/255.0 alpha:1] forState:UIControlStateNormal];
-        button.titleLabel.font = [UIFont systemFontOfSize:17];
+        button.titleLabel.font = [UIFont boldSystemFontOfSize:17];
     } else if (action.style == SCAlertActionStyleCancel) {
         [button setTitleColor:[UIColor colorWithRed:102/255.0 green:102/255.0 blue:102/255.0 alpha:1] forState:UIControlStateNormal];
         button.titleLabel.font = [UIFont boldSystemFontOfSize:17];
@@ -321,39 +389,6 @@ static CGFloat const kButtonHeight = 44;
     }
 }
 
-- (void)show {
-    if (self.isShowing) {
-        return;
-    }
-    self.isShowing = YES;
-    
-    UIWindow *window = [UIApplication sharedApplication].keyWindow;
-    UIView *backgroundView = [[UIView alloc] init];
-    backgroundView.frame = window.bounds;
-    backgroundView.backgroundColor = [UIColor blackColor];
-    backgroundView.alpha = 0;
-    [backgroundView addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(backgroundViewTap:)]];
-    [window addSubview:backgroundView];
-    _backgroundView = backgroundView;
-    [window addSubview:self];
-
-    if (self.style == SCAlertViewStyleAlert) {
-        self.alpha = 0;
-        self.transform = CGAffineTransformMakeScale(1.15, 1.15);
-        [UIView animateWithDuration:0.2 animations:^{
-            backgroundView.alpha = 0.4;
-            self.alpha = 1;
-            self.transform = CGAffineTransformMakeScale(1, 1);
-        }];
-    } else {
-        self.transform = CGAffineTransformMakeTranslation(0, self.frame.size.height);
-        [UIView animateWithDuration:0.2 animations:^{
-            backgroundView.alpha = 0.4;
-            self.transform = CGAffineTransformMakeTranslation(0, 0);
-        }];
-    }
-}
-
 - (void)dismiss {
     if (!self.isShowing) {
         return;
@@ -377,42 +412,6 @@ static CGFloat const kButtonHeight = 44;
             [self.backgroundView removeFromSuperview];
             [self removeFromSuperview];
         }];
-    }
-}
-
-- (void)setTitle:(NSString *)title {
-    if (_title != title) {
-        _title = title;
-        self.titleLabel.text = title;
-        
-        [self layoutAlertView];
-    }
-}
-
-- (void)setAttrTitle:(NSAttributedString *)attrTitle {
-    if (_attrTitle != attrTitle) {
-        _attrTitle = attrTitle;
-        self.titleLabel.attributedText = attrTitle;
-        
-        [self layoutAlertView];
-    }
-}
-
-- (void)setMessage:(NSString *)message {
-    if (_message != message) {
-        _message = message;
-        self.messageLabel.text = message;
-        
-        [self layoutAlertView];
-    }
-}
-
-- (void)setAttrMessage:(NSAttributedString *)attrMessage {
-    if (_attrMessage != attrMessage) {
-        _attrMessage = attrMessage;
-        self.messageLabel.attributedText = attrMessage;
-        
-        [self layoutAlertView];
     }
 }
 

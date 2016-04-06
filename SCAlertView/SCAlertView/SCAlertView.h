@@ -37,9 +37,6 @@ NS_ASSUME_NONNULL_BEGIN
 + (instancetype)alertViewWithTitle:(nullable NSString *)title attributedMessage:(nullable NSAttributedString *)message style:(SCAlertViewStyle)style;
 + (instancetype)alertViewWithAttributedTitle:(nullable NSAttributedString *)title attributedMessage:(nullable NSAttributedString *)message style:(SCAlertViewStyle)style;
 
-/**
- *  只支持0-2个action，超过两个action将只显示前两个
- */
 - (void)addAction:(SCAlertAction *)action;
 
 @property (nonatomic, strong, readonly) NSArray<SCAlertAction *> *actions;
