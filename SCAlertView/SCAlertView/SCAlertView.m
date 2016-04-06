@@ -272,7 +272,7 @@ static CGFloat const kButtonHeight = 44;
             button.frame = CGRectMake(0, height, self.frame.size.width / 2, kButtonHeight);
             
             line = [self layoutLine:self.actions[1] index:1 height:height];
-            line.frame = CGRectMake(self.frame.size.width / 2, 0, 0.5, kButtonHeight);
+            line.frame = CGRectMake(self.frame.size.width / 2, height, 0.5, kButtonHeight);
             button = [self createButton:self.actions[1] index:1];
             button.frame = CGRectMake(self.frame.size.width / 2, height, self.frame.size.width / 2, kButtonHeight);
             height += button.frame.size.height;
