@@ -8,6 +8,8 @@
 
 #import "SCAlertView.h"
 
+static CGFloat const kButtonHeight = 44;
+
 @interface SCAlertAction()
 
 @property (nonatomic, copy, readwrite) NSString *title;
@@ -34,50 +36,57 @@
 @property (nonatomic, weak) UILabel *titleLabel;
 @property (nonatomic, weak) UILabel *messageLabel;
 @property (nonatomic, strong) NSMutableArray *buttons;
-@property (nonatomic, weak) UIView *lineTop;
-@property (nonatomic, weak) UIView *lineMid;
+@property (nonatomic, strong) NSMutableArray *lines;
 @property (nonatomic, assign) BOOL isShowing;
 @property (nonatomic, weak) UIView *backgroundView;
+@property (nonatomic, readwrite) SCAlertViewStyle style;
 
 @end
 
 @implementation SCAlertView
 
-+ (instancetype)alertViewWithTitle:(NSString *)title message:(NSString *)message {
-    SCAlertView *alertView = [self alertView];
++ (instancetype)alertViewWithTitle:(NSString *)title message:(NSString *)message style:(SCAlertViewStyle)style {
+    SCAlertView *alertView = [self alertViewWithStyle:style];
     alertView.title = title;
     alertView.message = message;
     return alertView;
 }
 
-+ (instancetype)alertViewWithAttributedTitle:(NSAttributedString *)title message:(NSString *)message {
-    SCAlertView *alertView = [self alertView];
++ (instancetype)alertViewWithAttributedTitle:(NSAttributedString *)title message:(NSString *)message style:(SCAlertViewStyle)style {
+    SCAlertView *alertView = [self alertViewWithStyle:style];
     alertView.attrTitle = title;
     alertView.message = message;
     return alertView;
 }
 
-+ (instancetype)alertViewWithTitle:(NSString *)title attributedMessage:(NSAttributedString *)message {
-    SCAlertView *alertView = [self alertView];
++ (instancetype)alertViewWithTitle:(NSString *)title attributedMessage:(NSAttributedString *)message style:(SCAlertViewStyle)style {
+    SCAlertView *alertView = [self alertViewWithStyle:style];
     alertView.title = title;
     alertView.attrMessage = message;
     return alertView;
 }
 
-+ (instancetype)alertViewWithAttributedTitle:(NSAttributedString *)title attributedMessage:(NSAttributedString *)message {
-    SCAlertView *alertView = [self alertView];
++ (instancetype)alertViewWithAttributedTitle:(NSAttributedString *)title attributedMessage:(NSAttributedString *)message style:(SCAlertViewStyle)style {
+    SCAlertView *alertView = [self alertViewWithStyle:style];
     alertView.attrTitle = title;
     alertView.attrMessage = message;
     return alertView;
 }
 
-+ (instancetype)alertView {
-    CGFloat width = 270;
-    CGFloat x = ([UIScreen mainScreen].bounds.size.width - 270) / 2.0;
-    SCAlertView *alertView = [[SCAlertView alloc] initWithFrame:CGRectMake(x, 0, width, 0)];
++ (instancetype)alertViewWithStyle:(SCAlertViewStyle)style {
+    SCAlertView *alertView = [[SCAlertView alloc] init];
     alertView.backgroundColor = [UIColor colorWithRed:241/255.0 green:241/255.0 blue:237/255.0 alpha:1];
-    alertView.layer.cornerRadius = 12;
-    alertView.clipsToBounds = YES;
+    alertView.style = style;
+    if (style == SCAlertViewStyleAlert) {
+        CGFloat width = 270;
+        CGFloat x = ([UIScreen mainScreen].bounds.size.width - width) / 2.0;
+        alertView.frame = CGRectMake(x, 0, width, 0);
+        alertView.layer.cornerRadius = 12;
+        alertView.clipsToBounds = YES;
+    } else {
+        CGFloat width = [UIScreen mainScreen].bounds.size.width;
+        alertView.frame = CGRectMake(0, 0, width, 0);
+    }
     [alertView layoutAlertView];
     return alertView;
 }
@@ -90,13 +99,76 @@
 }
 
 - (void)layoutAlertView {
-    
-    CGFloat height = 22;
-    
+    if (self.style == SCAlertViewStyleAlert) {
+        [self layoutAlert];
+    } else {
+        [self layoutActionSheet];
+    }
+}
+
+- (void)layoutActionSheet {
+    CGFloat height = 14;
+    CGFloat labelWidth = self.frame.size.width - 32;
     if (self.title || self.attrTitle) {
         CGRect frame = self.titleLabel.frame;
         frame.origin.y = height;
-        frame.size.height = [self.titleLabel sizeThatFits:CGSizeMake(238, MAXFLOAT)].height;
+        frame.size.height = [self.titleLabel sizeThatFits:CGSizeMake(labelWidth, MAXFLOAT)].height;
+        self.titleLabel.frame = frame;
+        height += frame.size.height;
+    }
+    
+    if (self.message || self.attrMessage) {
+        if (self.title || self.attrTitle) {
+            height += 2;
+        }
+        CGRect frame = self.messageLabel.frame;
+        frame.origin.y = height;
+        frame.size.height = [self.messageLabel sizeThatFits:CGSizeMake(labelWidth, MAXFLOAT)].height;
+        self.messageLabel.frame = frame;
+        height += frame.size.height;
+    }
+    
+    if ((self.title || self.attrTitle) || (self.message || self.attrMessage)) {
+        height += 14;
+    }
+    
+    if (self.actions.count) {
+        NSInteger indexOfCancel = -1;
+        for (SCAlertAction *action in self.actions) {
+            NSInteger index = [self.actions indexOfObject:action];
+            if (action.style != SCAlertActionStyleCancel) {
+                UIView *line = [self layoutLine:action index:index height:height];
+                height += line.frame.size.height;
+                UIButton *button = [self layoutButton:action index:index height:height];
+                height += button.frame.size.height;
+            } else {
+                NSAssert(indexOfCancel == -1, @"SCAlertView can only have one action with a style of SCAlertActionStyleCancel");
+                indexOfCancel = index;
+            }
+        }
+        if (indexOfCancel >= 0) {
+            UIView *line = [self layoutLine:self.actions[indexOfCancel] index:indexOfCancel height:height];
+            height += line.frame.size.height;
+            UIButton *button = [self layoutButton:self.actions[indexOfCancel] index:indexOfCancel height:height];
+            height += button.frame.size.height;
+        }
+    }
+
+    CGRect frame = self.frame;
+    frame.size.height = height;
+    frame.origin.y = [UIScreen mainScreen].bounds.size.height - height;
+    self.frame = frame;
+    
+    NSAssert(height != 0, @"SCAlertView must have a title, a message or an action to display");
+}
+
+- (void)layoutAlert {
+    CGFloat height = 22;
+    CGFloat labelWidth = self.frame.size.width - 32;
+    if (self.title || self.attrTitle) {
+        CGRect frame = self.titleLabel.frame;
+        frame.origin.y = height;
+        frame.size.height = [self.titleLabel sizeThatFits:CGSizeMake(labelWidth, MAXFLOAT)].height;
         self.titleLabel.frame = frame;
         height += frame.size.height;
     }
@@ -106,13 +178,13 @@
             height += 5;
             CGRect frame = self.messageLabel.frame;
             frame.origin.y = height;
-            frame.size.height = [self.messageLabel sizeThatFits:CGSizeMake(238, MAXFLOAT)].height;
+            frame.size.height = [self.messageLabel sizeThatFits:CGSizeMake(labelWidth, MAXFLOAT)].height;
             self.messageLabel.frame = frame;
             height += frame.size.height;
         } else {
             CGRect frame = self.messageLabel.frame;
             frame.origin.y = height;
-            frame.size.height = [self.messageLabel sizeThatFits:CGSizeMake(238, MAXFLOAT)].height;
+            frame.size.height = [self.messageLabel sizeThatFits:CGSizeMake(labelWidth, MAXFLOAT)].height;
             self.messageLabel.frame = frame;
             height += frame.size.height;
         }
@@ -123,42 +195,39 @@
     }
     
     if (self.actions.count) {
-        CGRect frame = self.lineTop.frame;
-        frame.origin.y = height;
-        self.lineTop.frame = frame;
-        height += 0.5;
-        
-        [self.buttons makeObjectsPerformSelector:@selector(removeFromSuperview)];
-        [self.buttons removeAllObjects];
-        
-        if (self.actions.count == 1) {
-            UIButton *button = [self createButton:self.actions[0]];
-            button.tag = 1000;
-            button.frame = CGRectMake(0, height, 270, 44);
-            [self.buttons addObject:button];
-            height += 44;
-        } else if (self.actions.count >= 2) {
-            UIButton *button = [self createButton:self.actions[0]];
-            button.tag = 1000;
-            button.frame = CGRectMake(0, height, 135, 44);
-            [self.buttons addObject:button];
+        if (self.actions.count == 2) {
+            UIView *line = [self layoutLine:self.actions[0] index:0 height:height];
+            height += line.frame.size.height;
+            UIButton *button = [self createButton:self.actions[0] index:0];
+            button.frame = CGRectMake(0, height, self.frame.size.width / 2, kButtonHeight);
             
-            frame = self.lineMid.frame;
-            frame.origin.x = 135;
-            frame.origin.y = height;
-            self.lineMid.frame = frame;
+            line = [self layoutLine:self.actions[1] index:1 height:height];
+            line.frame = CGRectMake(self.frame.size.width / 2, 0, 0.5, kButtonHeight);
+            button = [self createButton:self.actions[1] index:1];
+            button.frame = CGRectMake(self.frame.size.width / 2, height, self.frame.size.width / 2, kButtonHeight);
+            height += button.frame.size.height;
             
-            button = [self createButton:self.actions[1]];
-            button.tag = 1001;
-            button.frame = CGRectMake(135, height, 135, 44);
-            [self.buttons addObject:button];
-            height += 44;
-            
-            [self bringSubviewToFront:self.lineMid];
+        } else {
+            NSInteger indexOfCancel = -1;
+            for (SCAlertAction *action in self.actions) {
+                NSInteger index = [self.actions indexOfObject:action];
+                if (action.style != SCAlertActionStyleCancel) {
+                    UIView *line = [self layoutLine:action index:index height:height];
+                    height += line.frame.size.height;
+                    UIButton *button = [self layoutButton:action index:index height:height];
+                    height += button.frame.size.height;
+                } else {
+                    NSAssert(indexOfCancel == -1, @"SCAlertView can only have one action with a style of SCAlertActionStyleCancel");
+                    indexOfCancel = index;
+                }
+            }
+            if (indexOfCancel >= 0) {
+                UIView *line = [self layoutLine:self.actions[indexOfCancel] index:indexOfCancel height:height];
+                height += line.frame.size.height;
+                UIButton *button = [self layoutButton:self.actions[indexOfCancel] index:indexOfCancel height:height];
+                height += button.frame.size.height;
+            }
         }
-    } else {
-        [_lineTop removeFromSuperview];
-        [_lineMid removeFromSuperview];
     }
     
     CGRect frame = self.frame;
@@ -167,6 +236,20 @@
     self.frame = frame;
     
     NSAssert(height != 0, @"SCAlertView must have a title, a message or an action to display");
+}
+
+- (UIView *)layoutLine:(SCAlertAction *)action index:(NSInteger)index height:(CGFloat)height {
+    UIView *line = [self createLine:action index:index];
+    CGRect frame = line.frame;
+    frame.origin.y = height;
+    line.frame = frame;
+    return line;
+}
+
+- (UIButton *)layoutButton:(SCAlertAction *)action index:(NSInteger)index height:(CGFloat)height {
+    UIButton *button = [self createButton:action index:index];
+    button.frame = CGRectMake(0, height, self.frame.size.width, kButtonHeight);
+    return button;
 }
 
 - (UIImage *)cornerRadiusBackgroundImage {
@@ -179,21 +262,49 @@
     return image;
 }
 
-- (UIButton *)createButton:(SCAlertAction *)action {
-    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
-    [button setBackgroundImage:[self cornerRadiusBackgroundImage] forState:UIControlStateHighlighted];
-    button.titleLabel.font = [UIFont boldSystemFontOfSize:16];
-    [button setTitle:action.title forState:UIControlStateNormal];
-    if (action.style == SCAlertActionStyleCancel) {
-        [button setTitleColor:[UIColor colorWithRed:102/255.0 green:102/255.0 blue:102/255.0 alpha:1] forState:UIControlStateNormal];
+- (UIButton *)createButton:(SCAlertAction *)action index:(NSInteger)index {
+    UIButton *button;
+    if (self.buttons.count > index) {
+        button = self.buttons[index];
     } else {
-        [button setTitleColor:[UIColor colorWithRed:255/255.0 green:102/255.0 blue:102/255.0 alpha:1] forState:UIControlStateNormal];
+        button = [UIButton buttonWithType:UIButtonTypeCustom];
+        [button setBackgroundImage:[self cornerRadiusBackgroundImage] forState:UIControlStateHighlighted];
+        [button addTarget:self action:@selector(buttonPressed:) forControlEvents:UIControlEventTouchUpInside];
+        button.tag = index + 1000;
+        [self addSubview:button];
+        [self.buttons addObject:button];
     }
-    
-    [button addTarget:self action:@selector(buttonPressed:) forControlEvents:UIControlEventTouchUpInside];
-    [self addSubview:button];
-    [self.buttons addObject:button];
+    if (action.style == SCAlertActionStyleConfirm) {
+        [button setTitleColor:[UIColor colorWithRed:255/255.0 green:102/255.0 blue:102/255.0 alpha:1] forState:UIControlStateNormal];
+        button.titleLabel.font = [UIFont systemFontOfSize:17];
+    } else if (action.style == SCAlertActionStyleCancel) {
+        [button setTitleColor:[UIColor colorWithRed:102/255.0 green:102/255.0 blue:102/255.0 alpha:1] forState:UIControlStateNormal];
+        button.titleLabel.font = [UIFont boldSystemFontOfSize:17];
+    } else {
+        [button setTitleColor:[UIColor colorWithRed:102/255.0 green:102/255.0 blue:102/255.0 alpha:1] forState:UIControlStateNormal];
+        button.titleLabel.font = [UIFont systemFontOfSize:17];
+    }
+    [button setTitle:action.title forState:UIControlStateNormal];
     return button;
+}
+
+- (UIView *)createLine:(SCAlertAction *)action index:(NSInteger)inedx {
+    UIView *line;
+    if (self.lines.count > inedx) {
+        line = self.lines[inedx];
+    } else {
+        line = [[UIView alloc] init];
+        [self addSubview:line];
+        [self.lines addObject:line];
+    }
+    if (self.style == SCAlertViewStyleActionSheet && action.style == SCAlertActionStyleCancel) {
+        line.frame = CGRectMake(0, 0, self.frame.size.width, 5);
+        line.backgroundColor = [UIColor colorWithRed:130/255.0 green:130/255.0 blue:130/255.0 alpha:1];
+    } else {
+        line.frame = CGRectMake(0, 0, self.frame.size.width, 0.5);
+        line.backgroundColor = [UIColor colorWithRed:221/255.0 green:221/255.0 blue:221/255.0 alpha:1];
+    }
+    return line;
 }
 
 - (void)buttonPressed:(UIButton *)sender {
@@ -201,6 +312,12 @@
     SCAlertAction *action = self.actions[sender.tag - 1000];
     if (action.handler) {
         action.handler(action);
+    }
+}
+
+- (void)backgroundViewTap:(id)sender {
+    if (self.style == SCAlertViewStyleActionSheet) {
+        [self dismiss];
     }
 }
 
@@ -215,18 +332,26 @@
     backgroundView.frame = window.bounds;
     backgroundView.backgroundColor = [UIColor blackColor];
     backgroundView.alpha = 0;
+    [backgroundView addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(backgroundViewTap:)]];
     [window addSubview:backgroundView];
     _backgroundView = backgroundView;
     [window addSubview:self];
-    self.center = window.center;
-    
-    self.alpha = 0;
-    self.transform = CGAffineTransformMakeScale(1.15, 1.15);
-    [UIView animateWithDuration:0.2 animations:^{
-        backgroundView.alpha = 0.4;
-        self.alpha = 1;
-        self.transform = CGAffineTransformMakeScale(1, 1);
-    }];
+
+    if (self.style == SCAlertViewStyleAlert) {
+        self.alpha = 0;
+        self.transform = CGAffineTransformMakeScale(1.15, 1.15);
+        [UIView animateWithDuration:0.2 animations:^{
+            backgroundView.alpha = 0.4;
+            self.alpha = 1;
+            self.transform = CGAffineTransformMakeScale(1, 1);
+        }];
+    } else {
+        self.transform = CGAffineTransformMakeTranslation(0, self.frame.size.height);
+        [UIView animateWithDuration:0.2 animations:^{
+            backgroundView.alpha = 0.4;
+            self.transform = CGAffineTransformMakeTranslation(0, 0);
+        }];
+    }
 }
 
 - (void)dismiss {
@@ -235,13 +360,24 @@
     }
     self.isShowing = NO;
     
-    [UIView animateWithDuration:0.3 animations:^{
-        self.backgroundView.alpha = 0;
-        self.alpha = 0;
-    } completion:^(BOOL finished) {
-        [self.backgroundView removeFromSuperview];
-        [self removeFromSuperview];
-    }];
+    if (self.style == SCAlertViewStyleAlert) {
+        [UIView animateWithDuration:0.3 animations:^{
+            self.backgroundView.alpha = 0;
+            self.alpha = 0;
+        } completion:^(BOOL finished) {
+            [self.backgroundView removeFromSuperview];
+            [self removeFromSuperview];
+        }];
+    } else {
+        self.transform = CGAffineTransformMakeTranslation(0, 0);
+        [UIView animateWithDuration:0.3 animations:^{
+            self.backgroundView.alpha = 0;
+            self.transform = CGAffineTransformMakeTranslation(0, self.frame.size.height);
+        } completion:^(BOOL finished) {
+            [self.backgroundView removeFromSuperview];
+            [self removeFromSuperview];
+        }];
+    }
 }
 
 - (void)setTitle:(NSString *)title {
@@ -282,9 +418,10 @@
 
 - (UILabel *)titleLabel {
     if (!_titleLabel) {
-        CGFloat width = 238;
-        CGFloat x = (270 - 238) / 2;
-        UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(x, 0, width, 0)];
+        UILabel *label = [[UILabel alloc] init];
+        CGFloat width = self.frame.size.width - 32;
+        CGFloat x = (self.frame.size.width - width) / 2;
+        label.frame = CGRectMake(x, 0, width, 0);
         label.font = [UIFont boldSystemFontOfSize:17];
         label.textAlignment = NSTextAlignmentCenter;
         label.numberOfLines = 0;
@@ -297,9 +434,10 @@
 
 - (UILabel *)messageLabel {
     if (!_messageLabel) {
-        CGFloat width = 238;
-        CGFloat x = (270 - 238) / 2;
-        UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(x, 0, width, 0)];
+        UILabel *label = [[UILabel alloc] init];
+        CGFloat width = self.frame.size.width - 32;
+        CGFloat x = (self.frame.size.width - width) / 2;
+        label.frame = CGRectMake(x, 0, width, 0);
         label.font = [UIFont systemFontOfSize:13];
         label.textAlignment = NSTextAlignmentCenter;
         label.numberOfLines = 0;
@@ -317,24 +455,11 @@
     return _buttons;
 }
 
-- (UIView *)lineTop {
-    if (!_lineTop) {
-        UIView *lineTop = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 270, 0.5)];
-        lineTop.backgroundColor = [UIColor colorWithRed:221/255.0f green:221/255.0f blue:221/255.0f alpha:1.000];
-        [self addSubview:lineTop];
-        _lineTop = lineTop;
+- (NSMutableArray *)lines {
+    if (!_lines) {
+        _lines = [NSMutableArray array];
     }
-    return _lineTop;
-}
-
-- (UIView *)lineMid {
-    if (!_lineMid) {
-        UIView *lineMid = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 0.5, 44)];
-        lineMid.backgroundColor = [UIColor colorWithRed:221/255.0f green:221/255.0f blue:221/255.0f alpha:1.000];
-        [self addSubview:lineMid];
-        _lineMid = lineMid;
-    }
-    return _lineMid;
+    return _lines;
 }
 
 @end

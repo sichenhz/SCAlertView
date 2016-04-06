@@ -9,8 +9,14 @@
 #import <UIKit/UIKit.h>
 
 typedef NS_ENUM(NSInteger, SCAlertActionStyle) {
-    SCAlertActionStyleConfirm = 0,
+    SCAlertActionStyleDefault = 0,
     SCAlertActionStyleCancel,
+    SCAlertActionStyleConfirm
+};
+
+typedef NS_ENUM(NSInteger, SCAlertViewStyle) {
+    SCAlertViewStyleAlert = 0,
+    SCAlertViewStyleActionSheet
 };
 
 NS_ASSUME_NONNULL_BEGIN
@@ -26,10 +32,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface SCAlertView : UIView
 
-+ (instancetype)alertViewWithTitle:(nullable NSString *)title message:(nullable NSString *)message;
-+ (instancetype)alertViewWithAttributedTitle:(nullable NSAttributedString *)title message:(nullable NSString *)message;
-+ (instancetype)alertViewWithTitle:(nullable NSString *)title attributedMessage:(nullable NSAttributedString *)message;
-+ (instancetype)alertViewWithAttributedTitle:(nullable NSAttributedString *)title attributedMessage:(nullable NSAttributedString *)message;
++ (instancetype)alertViewWithTitle:(nullable NSString *)title message:(nullable NSString *)message style:(SCAlertViewStyle)style;
++ (instancetype)alertViewWithAttributedTitle:(nullable NSAttributedString *)title message:(nullable NSString *)message style:(SCAlertViewStyle)style;
++ (instancetype)alertViewWithTitle:(nullable NSString *)title attributedMessage:(nullable NSAttributedString *)message style:(SCAlertViewStyle)style;
++ (instancetype)alertViewWithAttributedTitle:(nullable NSAttributedString *)title attributedMessage:(nullable NSAttributedString *)message style:(SCAlertViewStyle)style;
 
 /**
  *  只支持0-2个action，超过两个action将只显示前两个
@@ -41,6 +47,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, copy, nullable) NSAttributedString *attrTitle;
 @property (nonatomic, copy, nullable) NSString *message;
 @property (nonatomic, copy, nullable) NSAttributedString *attrMessage;
+
+@property (nonatomic, readonly) SCAlertViewStyle style;
 
 - (void)show;
 

@@ -31,6 +31,7 @@
     UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"同意退款￥12" message:@"退款金额将返回买家银行卡" preferredStyle:UIAlertControllerStyleAlert];
     [alert addAction:[UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleCancel handler:nil]];
     [alert addAction:[UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleDefault handler:nil]];
+    [alert addAction:[UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleDestructive handler:nil]];
 
     [self presentViewController:alert animated:YES completion:nil];
 }
@@ -44,10 +45,11 @@
         [attrString addAttribute:NSForegroundColorAttributeName value:[UIColor redColor] range:result.range];
     }
 
-    SCAlertView *alertView = [SCAlertView alertViewWithAttributedTitle:attrString message:@"退款金额将返回买家银行卡"];
+    SCAlertView *alertView = [SCAlertView alertViewWithAttributedTitle:attrString message:@"退款金额将返回买家银行卡" style:SCAlertViewStyleAlert];
     SCAlertAction *action = [SCAlertAction actionWithTitle:@"确定" style:SCAlertActionStyleConfirm handler:^(SCAlertAction *action) {
         NSLog(@"点击确定");
     }];
+    [alertView addAction:[SCAlertAction actionWithTitle:@"test" style:SCAlertActionStyleDefault handler:nil]];
     [alertView addAction:[SCAlertAction actionWithTitle:@"取消" style:SCAlertActionStyleCancel handler:nil]];
     [alertView addAction:action];
     [alertView show];
