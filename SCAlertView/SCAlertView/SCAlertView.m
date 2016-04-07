@@ -8,8 +8,6 @@
 
 #import "SCAlertView.h"
 
-static CGFloat const kButtonHeight = 44;
-
 @interface SCAlertAction()
 
 @property (nonatomic, copy, readwrite) NSString *title;
@@ -37,13 +35,17 @@ static CGFloat const kButtonHeight = 44;
 @property (nonatomic, weak) UILabel *messageLabel;
 @property (nonatomic, strong) NSMutableArray *buttons;
 @property (nonatomic, strong) NSMutableArray *lines;
-@property (nonatomic, assign) BOOL isShowing;
+@property (nonatomic) BOOL isShowing;
 @property (nonatomic, weak) UIView *backgroundView;
 @property (nonatomic, readwrite) SCAlertViewStyle style;
+@property (nonatomic) CGFloat buttonHeight;
 
 @end
 
 @implementation SCAlertView
+{
+    CGFloat _buttonHeight;
+}
 
 #pragma mark - Public Method
 
@@ -158,12 +160,14 @@ static CGFloat const kButtonHeight = 44;
     alertView.backgroundColor = [UIColor colorWithRed:241/255.0 green:241/255.0 blue:237/255.0 alpha:1];
     alertView.style = style;
     if (style == SCAlertViewStyleAlert) {
+        alertView.buttonHeight = 44;
         CGFloat width = 270;
         CGFloat x = ([UIScreen mainScreen].bounds.size.width - width) / 2.0;
         alertView.frame = CGRectMake(x, 0, width, 0);
         alertView.layer.cornerRadius = 12;
         alertView.clipsToBounds = YES;
     } else {
+        alertView.buttonHeight = 50;
         CGFloat width = [UIScreen mainScreen].bounds.size.width;
         alertView.frame = CGRectMake(0, 0, width, 0);
     }
@@ -269,12 +273,12 @@ static CGFloat const kButtonHeight = 44;
             UIView *line = [self layoutLine:self.actions[0] index:0 height:height];
             height += line.frame.size.height;
             UIButton *button = [self createButton:self.actions[0] index:0];
-            button.frame = CGRectMake(0, height, self.frame.size.width / 2, kButtonHeight);
+            button.frame = CGRectMake(0, height, self.frame.size.width / 2, self.buttonHeight);
             
             line = [self layoutLine:self.actions[1] index:1 height:height];
-            line.frame = CGRectMake(self.frame.size.width / 2, height, 0.5, kButtonHeight);
+            line.frame = CGRectMake(self.frame.size.width / 2, height, 0.5, self.buttonHeight);
             button = [self createButton:self.actions[1] index:1];
-            button.frame = CGRectMake(self.frame.size.width / 2, height, self.frame.size.width / 2, kButtonHeight);
+            button.frame = CGRectMake(self.frame.size.width / 2, height, self.frame.size.width / 2, self.buttonHeight);
             height += button.frame.size.height;
             
         } else {
@@ -316,7 +320,7 @@ static CGFloat const kButtonHeight = 44;
 
 - (UIButton *)layoutButton:(SCAlertAction *)action index:(NSInteger)index height:(CGFloat)height {
     UIButton *button = [self createButton:action index:index];
-    button.frame = CGRectMake(0, height, self.frame.size.width, kButtonHeight);
+    button.frame = CGRectMake(0, height, self.frame.size.width, self.buttonHeight);
     return button;
 }
 
