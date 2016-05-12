@@ -1,5 +1,5 @@
-# SCPictureBrowser
-仿微信图片浏览
+# SCAlertView
+支持富文本的alertView
 
 ## Usage
 
